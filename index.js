@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     idconnection : ''
   };
 
-  console.log("<------------- se conectó ---------------------->");
+  console.log("<------------- [se conectó] ---------------------->");
   console.log("[tipo usuario]", tipousuario);
 
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
@@ -307,7 +307,7 @@ io.on('connection', (socket) => {
 });
  
 // var port = process.env.PORT || 3001;
-var port = process.env.PORT || 5000;
+var port = process.env.PORT || 3001;
 server.listen(port, function(){
    console.log('listening in http://localhost:' + port);
 });
