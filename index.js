@@ -79,6 +79,7 @@ io.on('connection', (socket) => {
 
   socket.on('enviapropuesta', (objetoPropuesta) => { //aqui el conductor envia propuesta al pasajero
     //console.log("solicitó viajee", objetoPasajero);
+    console.log("<--------ENVIO PROPUESTA --------->");
     var propuesta = JSON.parse(objetoPropuesta);
     //console.log("<-------------conductor envia propuesta ------------------>");
     //console.log(propuesta);
@@ -87,10 +88,7 @@ io.on('connection', (socket) => {
 
 
   socket.on('datatrackconductor', (objetoTrack) => { //aqui el conductor envia el tracking para todos los usuarios
-    console.log("<------- TRACK ---------------->");
     var datatrack = JSON.parse(objetoTrack);
-    console.log(datatrack);
-
     io.emit('recibirtrackconductor', {datatrack, createdAt: new Date()});    
   });
 
