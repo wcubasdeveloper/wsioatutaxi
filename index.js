@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     idconnection : ''
   };
 
-  console.log("<------------- [se conectó] ---------------------->");
+  console.log("<------------- [se conectó 22082021 ] ---------------------->");
   console.log("[tipo usuario]", tipousuario);
 
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
@@ -159,11 +159,26 @@ io.on('connection', (socket) => {
 
 
   socket.on('enviomensajeusuario', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
-    //console.log("solicitó viajee", objetoPasajero);
-    console.log("chat usuario", objeto);
+    
+    var codconductor = objeto.codconductorseleccionado;
+    var conductoresactivos = getSessionConductores();
+    var idSocketconductorAceptado = "";
+    //io.to(idSocketconductorRecepcion).emit('recepcionarmensajedeusuario', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
 
-    var idSocketconductorRecepcion = objeto.idsocketreceptor;
-    io.to(idSocketconductorRecepcion).emit('recepcionarmensajedeusuario', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
+    for(let i = 0 ; i < conductoresactivos.length ; i++){
+      var item = conductoresactivos[i];
+      var codigoconductor = conductoresactivos[i].codconductor;
+      var codigowsconnection = conductoresactivos[i].idconnection;
+      //
+      if(codigoconductor == codconductor){
+        idSocketconductorAceptado = codigowsconnection;
+      }
+    }
+
+    if(idSocketconductorAceptado != ""){ //si encontro el idconnection
+      //io.to(idSocketconductorAceptado).emit('pasajeroconfirmo', {objpasajeroSolicitud, createdAt: new Date()}); //envia la confirmacion al conductor
+      io.to(idSocketconductorAceptado).emit('recepcionarmensajedeusuario', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
+    }
 
   });
 
