@@ -298,10 +298,27 @@ io.on('connection', (socket) => {
   //   return encontroConductor;
   // }
 
-  function setSessionConductor(itemconductor){
-    ARR_CONDUCTORES_ACTIVOS.push(itemconductor);
+  function setSessionConductor(itemconductor){ //setea en la data de los conductores
+    
+    var codconductor = itemconductor.codconductor;
+    ARR_CONDUCTORES_ACTIVOS = removeritemsessionconductorbycod(codconductor);
+
+    ARR_CONDUCTORES_ACTIVOS.push(itemconductor)
   }
 
+
+  function removeritemsessionconductorbycod(idconductor){
+
+    var nuevalista = [];
+
+    nuevalista = ARR_CONDUCTORES_ACTIVOS.filter(x => {
+        return x.codconductor != idconductor;
+    })
+    
+    return nuevalista;
+  }
+
+  
   function getSessionConductores(){
     return ARR_CONDUCTORES_ACTIVOS;
   }
