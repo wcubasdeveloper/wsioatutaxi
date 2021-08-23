@@ -29,17 +29,19 @@ io.on('connection', (socket) => {
   var socketID = socket.id;
   let codigousuario =  0;
   let tipousuario = socket.handshake.query.tipousuario;
+  var fechahora =  new Date();
+
   let itemconductor = {
     codconductor : 0,
-    idconnection : ''
+    idconnection : '',
+    horafechaconnected: fechahora.toLocaleString()
   };
 
-  console.log("<------------- [se conectó 23082021 ] ---------------------->");
+  console.log("<------------- [se conectó 23082021 13:14 ] ---------------------->");
   console.log("[tipo usuario]", tipousuario);
 
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
     codigousuario = socket.handshake.query.codconductor;
-
     itemconductor.codconductor = codigousuario;
     itemconductor.idconnection = socketID;
     setSessionConductor(itemconductor);
@@ -73,18 +75,17 @@ io.on('connection', (socket) => {
 
     console.log("[pasajero solicita viaje]");
     var pasajero = JSON.parse(objetoPasajero);
-    io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
+    io.emit('pasajerosolicitaviaje', {
+      pasajero, createdAt: new Date()
+    });  
 
   });
 
   socket.on('listarclientesconectados', (obj) => { //aqui el pasajero solicita un viaje a los conductores
-
-    
     var conductoresactivos = getSessionConductores();
     console.log("<------------CONDUCTORES SOCKET ----------->");
     console.log(conductoresactivos);
     //io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
-
   });
 
 
@@ -264,38 +265,38 @@ io.on('connection', (socket) => {
     // io.emit('message', {msg: message.text, user: socket.username, createdAt: new Date()});    
   });
 
-  function guardarConductorInFile(objconductor, arrConductores){
-    arrConductores.push(objconductor);
-    fs.writeFile('dataconductoreslogin.json',  JSON.stringify(arrConductores) , 'utf8', function(){
-      console.log("hola");
-    });
-  }
+  // function guardarConductorInFile(objconductor, arrConductores){
+  //   arrConductores.push(objconductor);
+  //   fs.writeFile('dataconductoreslogin.json',  JSON.stringify(arrConductores) , 'utf8', function(){
+  //     console.log("hola");
+  //   });
+  // }
 
 
 
-  function getConductoresLogin(){
-    let conductores = fs.readFileSync('dataconductoreslogin.json');
-    let conductoresJSON = JSON.parse(conductores);
+  // function getConductoresLogin(){
+  //   let conductores = fs.readFileSync('dataconductoreslogin.json');
+  //   let conductoresJSON = JSON.parse(conductores);
 
-    return conductoresJSON;
-  }
+  //   return conductoresJSON;
+  // }
 
-  function busquedaDeConductorLogeado(idconductor){
-    let conductores = fs.readFileSync('dataconductoreslogin.json');
-    let conductoresJSON = JSON.parse(conductores);
-    //
-    let encontroConductor = false;
-    //
-    //console.log("ccantt-->", conductoresJSON.length);
-    //
-    for (let item of conductoresJSON) {
-      //console.log('item->', item ,item["idConductor"], idconductor);
-      if(item.idConductor == Number(idconductor)){
-        encontroConductor = true;
-      }
-    }
-    return encontroConductor;
-  }
+  // function busquedaDeConductorLogeado(idconductor){
+  //   let conductores = fs.readFileSync('dataconductoreslogin.json');
+  //   let conductoresJSON = JSON.parse(conductores);
+  //   //
+  //   let encontroConductor = false;
+  //   //
+  //   //console.log("ccantt-->", conductoresJSON.length);
+  //   //
+  //   for (let item of conductoresJSON) {
+  //     //console.log('item->', item ,item["idConductor"], idconductor);
+  //     if(item.idConductor == Number(idconductor)){
+  //       encontroConductor = true;
+  //     }
+  //   }
+  //   return encontroConductor;
+  // }
 
   function setSessionConductor(itemconductor){
     ARR_CONDUCTORES_ACTIVOS.push(itemconductor);
@@ -333,6 +334,6 @@ io.on('connection', (socket) => {
 // var port = process.env.PORT || 3001;
 var port = process.env.PORT || 3001;
 server.listen(port, function(){
-   console.log('listening in http://localhost:' + port);
+  console.log('listening in http://localhost:' + port);
 });
 
