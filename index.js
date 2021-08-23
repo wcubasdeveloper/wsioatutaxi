@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     idconnection : ''
   };
 
-  console.log("<------------- [se conectó 22082021 ] ---------------------->");
+  console.log("<------------- [se conectó 23082021 ] ---------------------->");
   console.log("[tipo usuario]", tipousuario);
 
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
@@ -76,6 +76,17 @@ io.on('connection', (socket) => {
     io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
 
   });
+
+  socket.on('listarclientesconectados', (obj) => { //aqui el pasajero solicita un viaje a los conductores
+
+    
+    var conductoresactivos = getSessionConductores();
+    console.log("<------------CONDUCTORES SOCKET ----------->");
+    console.log(conductoresactivos);
+    //io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
+
+  });
+
 
   socket.on('enviapropuesta', (objetoPropuesta) => { //aqui el conductor envia propuesta al pasajero
     //console.log("solicitó viajee", objetoPasajero);
