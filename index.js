@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
     horafechaconnected: fechahora.toLocaleString()
   };
 
-  console.log("<------------- ["+ tipousuario +"] se conectó 23082021 23:44 ] ---------------------->");
+  console.log("<------------- ["+ tipousuario +"] se conectó 03092021 12:12 ] ---------------------->");
   
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
     codigousuario = socket.handshake.query.codconductor;
@@ -112,7 +112,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('pingconductor', (obj) => { //aqui el pasajero solicita un viaje a los conductores
-    
+
     io.emit('conductoremitiosenial', {
       obj, createdAt: new Date()
     });
