@@ -23,6 +23,8 @@ let itemConductor = {
 
 let usuarioseteado = "";
 let ARR_CONDUCTORES_ACTIVOS = []; //aqui se guardaran los conductores activos con sus respectivos ids
+let ARR_PASAJEROS_ACTIVOS = []; //aqui se guardaran los pasajeros activos con sus respectivos ids
+
 //
 io.on('connection', (socket) => {
   //
@@ -37,9 +39,14 @@ io.on('connection', (socket) => {
     horafechaconnected: fechahora.toLocaleString()
   };
 
-  console.log("<------------- [se conectó 23082021 13:14 ] ---------------------->");
-  console.log("[tipo usuario]", tipousuario);
+  let itempasajero = {
+    codpasajero : 0,
+    idconnection : '',
+    horafechaconnected: fechahora.toLocaleString()
+  };
 
+  console.log("<------------- ["+ tipousuario +"] se conectó 23082021 23:44 ] ---------------------->");
+  
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
     codigousuario = socket.handshake.query.codconductor;
     itemconductor.codconductor = codigousuario;
@@ -48,6 +55,10 @@ io.on('connection', (socket) => {
   }
 
   if(tipousuario == 'pasajero'){ //si el usuario que se conecta es pasajero
+    codigousuario = socket.handshake.query.codpasajero;
+    itempasajero.codpasajero = Number(codigousuario);
+    itempasajero.idconnection = socketID;
+    setSessionPasajero(itempasajero);
 
   }
 
@@ -63,9 +74,21 @@ io.on('connection', (socket) => {
   //io.to(socketID).emit('sendsocketid', { socketidclient :  socketID}); //enviando el idSOCKET al cliente que ingresó
 
   socket.on('disconnect', function(){
-    console.log("<---------- se desconectó --------------->");
-    var removioitem =  removeitemSessionConductor(socket.id)
-    console.log("[idconnectionwebsocket]", socket.id); 
+    var idconnection = socket.id;
+    var removioitem =  removeitemSessionConductor(idconnection)
+    var tipousuario = socket.handshake.query.tipousuario;
+
+    console.log("<---------[" + tipousuario + "] se desconectó --------------->");
+
+    if(tipousuario == 'pasajero'){ //si el usuario pasajero de desconectó
+      removioitem =  removeitemSessionPasajero(idconnection)
+    }
+
+    if(tipousuario == 'conductor'){ //si el usuario conductor de desconectó
+      removioitem =  removeitemSessionConductor(idconnection)
+    }
+    //
+    console.log("[idconnectionwebsocket]", idconnection); 
     console.log("[removio item]", removioitem);
   });
   
@@ -88,6 +111,13 @@ io.on('connection', (socket) => {
     //io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
   });
 
+  socket.on('pingconductor', (obj) => { //aqui el pasajero solicita un viaje a los conductores
+    
+    io.emit('conductoremitiosenial', {
+      obj, createdAt: new Date()
+    });
+
+  });
 
   socket.on('enviapropuesta', (objetoPropuesta) => { //aqui el conductor envia propuesta al pasajero
     //console.log("solicitó viajee", objetoPasajero);
@@ -306,6 +336,25 @@ io.on('connection', (socket) => {
     ARR_CONDUCTORES_ACTIVOS.push(itemconductor)
   }
 
+  function setSessionPasajero(itempasajero){ //setea en la data de los conductores
+    
+    var codpasajero = itempasajero.codpasajero;
+    ARR_PASAJEROS_ACTIVOS = removeritemsessionpasajerobycod(codpasajero);
+
+    ARR_PASAJEROS_ACTIVOS.push(itempasajero);
+  }
+
+  function removeritemsessionpasajerobycod(idpasajero){
+
+    var nuevalista = [];
+
+    nuevalista = ARR_PASAJEROS_ACTIVOS.filter(x => {
+        return x.codpasajero != idpasajero;
+    });
+
+
+    return nuevalista;
+  }
 
   function removeritemsessionconductorbycod(idconductor){
 
@@ -345,6 +394,30 @@ io.on('connection', (socket) => {
    }
    return encontroid.removioitem;
  } 
+
+  function removeitemSessionPasajero(idSocketConnection){
+        
+    let encontroid = {
+      encontro : false,
+      posicion : 0,
+      removioitem : false
+    };
+  
+    for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
+        var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
+        if(idconnectsocket == idSocketConnection){
+          encontroid.encontro = true;
+          encontroid.posicion = i;
+      }
+    }
+
+    if(encontroid.encontro){ //si encuentra el idconnection entonces eliminar 
+      ARR_PASAJEROS_ACTIVOS.splice(encontroid.posicion, 1);
+        encontroid.removioitem = true;
+    }
+    return encontroid.removioitem;
+  } 
+
 
 });
  
