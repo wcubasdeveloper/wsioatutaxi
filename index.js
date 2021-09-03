@@ -66,18 +66,15 @@ io.on('connection', (socket) => {
   console.log("[ID connection SOCKET]", socketID);
   //console.log("[conductores activos]");
   //console.log(getSessionConductores());
-
   //console.log("socketID", socketID, 'id->', id);
   //
   // console.log("room--->", nameRoom);
-
   //io.to(socketID).emit('sendsocketid', { socketidclient :  socketID}); //enviando el idSOCKET al cliente que ingresó
 
   socket.on('disconnect', function(){
     var idconnection = socket.id;
     var removioitem =  removeitemSessionConductor(idconnection)
     var tipousuario = socket.handshake.query.tipousuario;
-
     console.log("<---------[" + tipousuario + "] se desconectó --------------->");
 
     if(tipousuario == 'pasajero'){ //si el usuario pasajero de desconectó
@@ -112,6 +109,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('pingconductor', (obj) => { //aqui el pasajero solicita un viaje a los conductores
+    
+    console.log("<----ping--->");
+    console.log(obj);
 
     io.emit('conductoremitiosenial', {
       obj, createdAt: new Date()
