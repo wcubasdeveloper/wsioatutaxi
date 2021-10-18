@@ -24,8 +24,10 @@ let itemConductor = {
 let usuarioseteado = "";
 let ARR_CONDUCTORES_ACTIVOS = []; //aqui se guardaran los conductores activos con sus respectivos ids
 let ARR_PASAJEROS_ACTIVOS = []; //aqui se guardaran los pasajeros activos con sus respectivos ids
-
 //
+
+let DATA_CONDUCTORES_EN_SERVICIO = []; //aqui están los conductores en servicio
+
 io.on('connection', (socket) => {
   //
   var socketID = socket.id;
@@ -44,6 +46,9 @@ io.on('connection', (socket) => {
     idconnection : '',
     horafechaconnected: fechahora.toLocaleString()
   };
+
+  io.to(socketID).emit('responseconnectionstatus', "OK" ); //enviando el idSOCKET al cliente que ingresó
+
 
   console.log("<------------- ["+ tipousuario +"] se conectó 03092021 12:12 ] ---------------------->");
   
@@ -73,8 +78,10 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', function(){
     var idconnection = socket.id;
-    var removioitem =  removeitemSessionConductor(idconnection)
+    var removioitem =  null;// removeitemSessionConductor(idconnection)
     var tipousuario = socket.handshake.query.tipousuario;
+    var codusuarioactivo = 0; 
+
     console.log("<---------[" + tipousuario + "] se desconectó --------------->");
 
     if(tipousuario == 'pasajero'){ //si el usuario pasajero de desconectó
@@ -82,14 +89,20 @@ io.on('connection', (socket) => {
     }
 
     if(tipousuario == 'conductor'){ //si el usuario conductor de desconectó
-      removioitem =  removeitemSessionConductor(idconnection)
+      removioitem =  removeitemSessionConductor(idconnection);
+      codusuarioactivo = socket.handshake.query.codconductor;
+
+      if(verificaEnConductoresConectadosByCond(codusuarioactivo).encontro){//verifica si el conductor está en servicio
+        // console.log("si está en servicio");
+        DATA_CONDUCTORES_EN_SERVICIO = removerConductorEnservicio(codusuarioactivo);
+      }
+      console.log("<--en servicio->", DATA_CONDUCTORES_EN_SERVICIO);
     }
     //
     console.log("[idconnectionwebsocket]", idconnection); 
     console.log("[removio item]", removioitem);
+    console.log("[cond activos]", ARR_CONDUCTORES_ACTIVOS);
   });
-  
-
 
   socket.on('solicitaviaje', (objetoPasajero) => { //aqui el pasajero solicita un viaje a los conductores
 
@@ -98,18 +111,96 @@ io.on('connection', (socket) => {
     io.emit('pasajerosolicitaviaje', {
       pasajero, createdAt: new Date()
     });  
-
   });
 
+  socket.on('conductorfinalizaservicio', (dataConductor) => { //aqui el pasajero solicita un viaje a los conductores
+    
+  });
+
+  socket.on('conductoriniciaservicio', (dataConductor) => { //aqui el pasajero solicita un viaje a los conductores
+    
+    var idconductor = dataConductor.idconductor;
+    var placaserv =  dataConductor.placa;
+    var codigopee = socket.handshake.query.codconductor;
+
+    var rptaconductor = {
+      conecto : false,
+      desresultado : ""
+    }
+
+    if(!verificaEnConductoresConectados(placaserv).encontro){ //si no está conectado
+      rptaconductor.conecto = true;
+      rptaconductor.desresultado = "Todo OK" + " placa [" + placaserv + "]";
+
+      var itemConductor = dataConductor;
+      DATA_CONDUCTORES_EN_SERVICIO.push(itemConductor)
+    }else{
+      rptaconductor.conecto = false;
+      rptaconductor.desresultado = "La placa " + placaserv + " se encuentra en servicio";
+    }
+
+    console.log("rptaconductor->",rptaconductor);
+
+    io.to(socket.id).emit('verificaestadoplaca', rptaconductor ); //enviando el idSOCKET al cliente que ingresó
+
+    // console.log("[pasajero solicita viaje]");
+    // var pasajero = JSON.parse(objetoPasajero);
+    // io.emit('pasajerosolicitaviaje', {
+    //   pasajero, createdAt: new Date()
+    // });
+  });
+
+  function verificaEnConductoresConectados(placaserv){
+    let encontroconductor = {
+      encontro : false
+    }
+
+    for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
+      console.log("<-placaserv->",placaserv,DATA_CONDUCTORES_EN_SERVICIO );
+
+      if(placaserv.toUpperCase()  == DATA_CONDUCTORES_EN_SERVICIO[i]["placa"].toUpperCase()  ){
+        encontroconductor.encontro = true;
+      }
+    }
+    return encontroconductor;
+  }
+
+  function verificaEnConductoresConectadosByCond(idconductor){
+    let encontroconductor = {
+      encontro : false
+    }
+    for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
+      console.log("IDS->",Number(idconductor)  ,Number(DATA_CONDUCTORES_EN_SERVICIO[i]["idconductor"]));
+
+      if(Number(idconductor)  == Number(DATA_CONDUCTORES_EN_SERVICIO[i]["idconductor"])  ){
+        encontroconductor.encontro = true;
+      }
+    }
+    return encontroconductor;
+  }
+
+  function getConductoresEnServicio(){
+    return DATA_CONDUCTORES_EN_SERVICIO;
+  }
+
+  function removerConductorEnservicio(idconductor){
+    var nwLista = [];
+    nwLista = DATA_CONDUCTORES_EN_SERVICIO.filter(x => {
+        return x.idconductor != idconductor;
+    })
+    
+    return nwLista;
+  }
+
   socket.on('listarclientesconectados', (obj) => { //aqui el pasajero solicita un viaje a los conductores
-    var conductoresactivos = getSessionConductores();
-    console.log("<------------CONDUCTORES SOCKET ----------->");
+    var conductoresactivos = getConductoresEnServicio();
+    console.log("<------------CONDUCTORES EN SERVICIO ----------->");
     console.log(conductoresactivos);
     //io.emit('pasajerosolicitaviaje', {pasajero, createdAt: new Date()});  
   });
 
   socket.on('pingconductor', (obj) => { //aqui el pasajero solicita un viaje a los conductores
-    
+
     console.log("<----ping--->");
     console.log(obj);
 
@@ -379,7 +470,7 @@ io.on('connection', (socket) => {
         posicion : 0,
         removioitem : false
     };
-
+    console.log("ARR_CONDUCTORES_ACTIVOS", ARR_CONDUCTORES_ACTIVOS,idSocketConnection);
    for(let i = 0;i<ARR_CONDUCTORES_ACTIVOS.length; i++){
        var idconnectsocket = ARR_CONDUCTORES_ACTIVOS[i].idconnection;
        if(idconnectsocket == idSocketConnection){
@@ -427,3 +518,19 @@ server.listen(port, function(){
   console.log('listening in http://localhost:' + port);
 });
 
+
+
+// {
+//    provider: 'fused',
+//   locationProvider: 1,
+//    time: 1630691678672,
+// latitude: -12.0091,
+//    longitude: -77.082235,
+// accuracy: 5,
+// speed: 0,
+// altitude: 0,
+// bearing: 90,
+// isFromMockProvider: false,
+// mockLocationsEnabled: false,
+//    id: 175
+//  }
