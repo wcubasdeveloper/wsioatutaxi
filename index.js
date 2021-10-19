@@ -95,6 +95,14 @@ io.on('connection', (socket) => {
       if(verificaEnConductoresConectadosByCond(codusuarioactivo).encontro){//verifica si el conductor está en servicio
         // console.log("si está en servicio");
         DATA_CONDUCTORES_EN_SERVICIO = removerConductorEnservicio(codusuarioactivo);
+
+        //ENVIANDO EL MENSAJE A LOS PASAJEROS CONECTADOS QUE EL IDCONDUCTOR SE HA IDO
+
+        for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
+          var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
+          io.to(idconnectsocket).emit('conductorsedesconecto', {idconductor : codusuarioactivo} ); //enviando el idSOCKET al cliente que ingresó
+        }
+
       }
       console.log("<--en servicio->", DATA_CONDUCTORES_EN_SERVICIO);
     }
@@ -176,6 +184,7 @@ io.on('connection', (socket) => {
         encontroconductor.encontro = true;
       }
     }
+
     return encontroconductor;
   }
 
