@@ -67,8 +67,8 @@ io.on('connection', (socket) => {
 
   }
 
-  console.log("[codigo usuario]", codigousuario);
-  console.log("[ID connection SOCKET]", socketID);
+  console.log("[codigo del usuario]", codigousuario);
+  console.log("[ID connection SOCKET", socketID);
   //console.log("[conductores activos]");
   //console.log(getSessionConductores());
   //console.log("socketID", socketID, 'id->', id);
