@@ -27,6 +27,7 @@ let ARR_PASAJEROS_ACTIVOS = []; //aqui se guardaran los pasajeros activos con su
 //
 
 let DATA_CONDUCTORES_EN_SERVICIO = []; //aqui están los conductores en servicio
+let  RADIO_COBERTURA_METROS = 1000;
 
 io.on('connection', (socket) => {
   //
@@ -38,7 +39,11 @@ io.on('connection', (socket) => {
   let itemconductor = {
     codconductor : 0,
     idconnection : '',
-    horafechaconnected: fechahora.toLocaleString()
+    horafechaconnected: fechahora.toLocaleString(),
+    ultipoposteolatlng : {
+      latitudultimo : 0,
+      longitudultimo : 0
+    }
   };
 
   let itempasajero = {
@@ -50,7 +55,8 @@ io.on('connection', (socket) => {
   io.to(socketID).emit('responseconnectionstatus', "OK" ); //enviando el idSOCKET al cliente que ingresó
 
 
-  console.log("<------------- ["+ tipousuario +"] se conectó 03092021 12:12 ] ---------------------->");
+  console.log("<------------- ["+ tipousuario +"] se conectó "+ fechahora +" ] ---------------------->");
+
   
   if(tipousuario == 'conductor'){ //si el usuario que se conecta es conductor
     codigousuario = socket.handshake.query.codconductor;
@@ -81,8 +87,9 @@ io.on('connection', (socket) => {
     var removioitem =  null;// removeitemSessionConductor(idconnection)
     var tipousuario = socket.handshake.query.tipousuario;
     var codusuarioactivo = 0; 
+    var fechahora =  new Date();
 
-    console.log("<---------[" + tipousuario + "] se desconectó --------------->");
+    console.log("<---------[" + tipousuario + "] se desconectó "+ fechahora.toLocaleString() +" --------------->");
 
     if(tipousuario == 'pasajero'){ //si el usuario pasajero de desconectó
       removioitem =  removeitemSessionPasajero(idconnection)
@@ -104,7 +111,7 @@ io.on('connection', (socket) => {
         }
 
       }
-      console.log("<--en servicio->", DATA_CONDUCTORES_EN_SERVICIO);
+      // console.log("<--en servicio->", DATA_CONDUCTORES_EN_SERVICIO);
     }
     //
     console.log("[idconnectionwebsocket]", idconnection); 
@@ -116,9 +123,46 @@ io.on('connection', (socket) => {
 
     console.log("[pasajero solicita viaje]");
     var pasajero = JSON.parse(objetoPasajero);
-    io.emit('pasajerosolicitaviaje', {
-      pasajero, createdAt: new Date()
-    });  
+    var latitudPuntoOrigen = pasajero.puntoinicial.lat;
+    var longitudPuntoOrigen = pasajero.puntoinicial.lng;
+
+    var taxisEnCobertura = [];
+
+    for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
+      
+      var ultipoPosteoLatitud = DATA_CONDUCTORES_EN_SERVICIO[i].ultipoposteolatlng.latitudultimo;
+      var ultipoPosteoLongitud = DATA_CONDUCTORES_EN_SERVICIO[i].ultipoposteolatlng.longitudultimo;
+      
+      //
+      var distanciaSolicitadoTaxi = obtenerDistancia(latitudPuntoOrigen,longitudPuntoOrigen, ultipoPosteoLatitud, ultipoPosteoLongitud);
+      if(distanciaSolicitadoTaxi <= RADIO_COBERTURA_METROS){ // esta dentro de cobertura
+        taxisEnCobertura.push(DATA_CONDUCTORES_EN_SERVICIO[i]["idconductor"]);
+      }
+      // console.log("distancia");
+      // console.log(distanciaSolicitadoTaxi);
+    }
+
+  
+    for(let i = 0;i<ARR_CONDUCTORES_ACTIVOS.length; i++){
+      var idconductorActivo = Number(ARR_CONDUCTORES_ACTIVOS[i]['codconductor']);
+      var socketIdConductor = ARR_CONDUCTORES_ACTIVOS[i]['idconnection'];
+      //
+      for(let j = 0;j<taxisEnCobertura.length; j++){
+        var codconductorEnCobertura = taxisEnCobertura[j];
+
+        if(idconductorActivo == codconductorEnCobertura){
+          io.to(socketIdConductor).emit('pasajerosolicitaviaje', {
+            pasajero, createdAt: new Date()
+          });
+
+        }
+      }
+    }
+
+
+    // io.emit('pasajerosolicitaviaje', {
+    //   pasajero, createdAt: new Date()
+    // });  
   });
 
   socket.on('conductorfinalizaservicio', (dataConductor) => { //aqui el pasajero solicita un viaje a los conductores
@@ -139,9 +183,9 @@ io.on('connection', (socket) => {
     if(!verificaEnConductoresConectados(placaserv).encontro){ //si no está conectado
       rptaconductor.conecto = true;
       rptaconductor.desresultado = "Todo OK" + " placa [" + placaserv + "]";
-
       var itemConductor = dataConductor;
-      DATA_CONDUCTORES_EN_SERVICIO.push(itemConductor)
+      //
+      DATA_CONDUCTORES_EN_SERVICIO.push(itemConductor);
     }else{
       rptaconductor.conecto = false;
       rptaconductor.desresultado = "La placa " + placaserv + " se encuentra en servicio";
@@ -178,8 +222,6 @@ io.on('connection', (socket) => {
       encontro : false
     }
     for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
-      console.log("IDS->",Number(idconductor)  ,Number(DATA_CONDUCTORES_EN_SERVICIO[i]["idconductor"]));
-
       if(Number(idconductor)  == Number(DATA_CONDUCTORES_EN_SERVICIO[i]["idconductor"])  ){
         encontroconductor.encontro = true;
       }
@@ -228,19 +270,20 @@ io.on('connection', (socket) => {
     io.emit('recibepropuesta', {propuesta, createdAt: new Date()});    
   });
 
-
   socket.on('datatrackconductor', (objetoTrack) => { //aqui el conductor envia el tracking para todos los usuarios
     var datatrack = JSON.parse(objetoTrack);
-    io.emit('recibirtrackconductor', {datatrack, createdAt: new Date()});    
+    var idconductor = datatrack.datoconductor.idConductor;
+    var latitudTrack = datatrack.datagps.latitud;
+    var longitudTrack = datatrack.datagps.longitud;
+    actualizarUltimoPosteoConductor(idconductor,latitudTrack, longitudTrack);//actualiza el ultimo posteo del taxi en el arreglo principal donde están todos los conductores activos
+    io.emit('recibirtrackconductor', {datatrack, createdAt: new Date()});
   });
 
   socket.on('testtrack', (testvalue) => { //aqui el conductor envia el tracking para todos los usuarios
     console.log("data->", testvalue);
   });
 
-
   socket.on('pasajeroconfirma', (objpasajeroSolicitud) => { //aqui el pasajero acepta propuesta de un conductor [version actual por codconductor]
-
     console.log("<------ pasajero confirma --------------->");
     //console.log("objpasajeroSolicitud", objpasajeroSolicitud.conductoresofertaron[0].propuesta);
     var codconductor = objpasajeroSolicitud.conductoresofertaron[0].propuesta.idconductor;
@@ -427,6 +470,37 @@ io.on('connection', (socket) => {
   //   }
   //   return encontroConductor;
   // }
+
+  function obtenerDistancia(lat1, lon1, lat2, lon2 ) {
+    var R = 6378137; // Earth’s mean radius in meter
+    var dLat = toRad(lat2 - lat1);
+    var dLong = toRad(lon2 - lon1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLong / 2) * Math.sin(dLong / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c;
+    return d; // returns the distance in meter
+  };
+
+  // Converts numeric degrees to radians
+  function toRad(Value) 
+  {
+      return Value * Math.PI / 180;
+  }
+
+  function actualizarUltimoPosteoConductor(idconductor, latitud, longitud){
+
+    for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
+      //console.log(DATA_CONDUCTORES_EN_SERVICIO[i]);
+      if(idconductor == DATA_CONDUCTORES_EN_SERVICIO[i].idconductor){
+        DATA_CONDUCTORES_EN_SERVICIO[i].ultipoposteolatlng = {
+          latitudultimo : latitud,
+          longitudultimo : longitud
+        }
+      }
+    }
+  }
 
   function setSessionConductor(itemconductor){ //setea en la data de los conductores
     
