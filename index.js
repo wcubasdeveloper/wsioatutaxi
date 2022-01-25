@@ -265,9 +265,9 @@ io.on('connection', (socket) => {
   socket.on('enviapropuesta', (objetoPropuesta) => { //aqui el conductor envia propuesta al pasajero
     //console.log("solicitó viajee", objetoPasajero);
     
-    console.log("<--------ENVIO PROPUESTA --------->");
+    console.log("<--------ENVIO PROPUESTA ------------->");
     var propuesta = JSON.parse(objetoPropuesta);
-    var idusuarioPasajero = idusuariopasajero["idusuariopasajero"];
+    var idusuarioPasajero = propuesta["idusuariopasajero"];
     
     if(idusuarioPasajero){
 
