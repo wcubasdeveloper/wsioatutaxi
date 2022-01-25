@@ -127,9 +127,10 @@ io.on('connection', (socket) => {
     var longitudPuntoOrigen = pasajero.puntoinicial.lng;
 
     var taxisEnCobertura = [];
-
+    console.log(DATA_CONDUCTORES_EN_SERVICIO)
     for(let i = 0;i<DATA_CONDUCTORES_EN_SERVICIO.length; i++){
-      
+      console.log("en el for");
+      console.log("POS->",i,'DATA->',DATA_CONDUCTORES_EN_SERVICIO[i]);
       var ultipoPosteoLatitud = DATA_CONDUCTORES_EN_SERVICIO[i].ultipoposteolatlng.latitudultimo;
       var ultipoPosteoLongitud = DATA_CONDUCTORES_EN_SERVICIO[i].ultipoposteolatlng.longitudultimo;
       
@@ -370,7 +371,7 @@ io.on('connection', (socket) => {
   socket.on('enviomensajeuconductor', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
     //console.log("solicitó viajee", objetoPasajero);
     console.log("chat conductor", objeto);
-    //var idSocketconductorRecepcion = objeto.idsocketreceptor;
+    
     io.emit('recepcionarmensajedeconductor', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
 
   });
@@ -378,7 +379,22 @@ io.on('connection', (socket) => {
   socket.on('confirmarterminoviaje', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
     //console.log("solicitó viajee", objetoPasajero);
     var dataconfirmacion = JSON.parse(objeto);
-    io.emit('conductorfinalizaviaje', {dataconfirmacion, createdAt: new Date()});    
+    var codigoUsuarioPasajero = dataconfirmacion.codusuariopasajero;
+
+    console.log("TERMINO VIAJE");
+    console.log(dataconfirmacion);
+ 
+
+    for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
+      console.log(ARR_PASAJEROS_ACTIVOS[i]);
+      var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
+      if( Number(ARR_PASAJEROS_ACTIVOS[i].codpasajero) == Number(codigoUsuarioPasajero)){
+        io.to(idconnectsocket).emit('conductorfinalizaviaje', {
+          dataconfirmacion, 
+          createdAt: new Date()
+        });
+      }
+    }
   });
   
   // socket.on('loginconductor', (objetoConductor) => {
