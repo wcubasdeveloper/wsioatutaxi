@@ -264,11 +264,27 @@ io.on('connection', (socket) => {
 
   socket.on('enviapropuesta', (objetoPropuesta) => { //aqui el conductor envia propuesta al pasajero
     //console.log("solicitó viajee", objetoPasajero);
+    
     console.log("<--------ENVIO PROPUESTA --------->");
     var propuesta = JSON.parse(objetoPropuesta);
-    //console.log("<-------------conductor envia propuesta ------------------>");
-    //console.log(propuesta);
-    io.emit('recibepropuesta', {propuesta, createdAt: new Date()});    
+    var idusuarioPasajero = idusuariopasajero["idusuariopasajero"];
+    
+    if(idusuarioPasajero){
+
+      for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
+        var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
+        if( Number(ARR_PASAJEROS_ACTIVOS[i].codpasajero) == Number(idusuarioPasajero)){
+          io.to(idconnectsocket).emit('recibepropuesta',
+          {
+            propuesta, 
+            createdAt: new Date()
+          });
+        }
+      }
+    }
+    // console.log("<-------------conductor envia propuesta ------------------>");
+    // console.log(propuesta);
+    // io.emit('recibepropuesta', {propuesta, createdAt: new Date()});    
   });
 
   socket.on('datatrackconductor', (objetoTrack) => { //aqui el conductor envia el tracking para todos los usuarios
@@ -386,7 +402,7 @@ io.on('connection', (socket) => {
  
 
     for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
-      console.log(ARR_PASAJEROS_ACTIVOS[i]);
+     
       var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
       if( Number(ARR_PASAJEROS_ACTIVOS[i].codpasajero) == Number(codigoUsuarioPasajero)){
         io.to(idconnectsocket).emit('conductorfinalizaviaje', {
