@@ -191,7 +191,7 @@ io.on('connection', (socket) => {
       rptaconductor.conecto = false;
       rptaconductor.desresultado = "La placa " + placaserv + " se encuentra en servicio";
     }
-
+    console.log("<<<<conductoriniciaservicio>>>")
     console.log("rptaconductor->",rptaconductor);
 
     io.to(socket.id).emit('verificaestadoplaca', rptaconductor ); //enviando el idSOCKET al cliente que ingresó
