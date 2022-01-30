@@ -171,7 +171,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('conductoriniciaservicio', (dataConductor) => { //aqui el pasajero solicita un viaje a los conductores
-    
+    console.log("<<<<---conductoriniciaservicio>>>")
+
     var idconductor = dataConductor.idconductor;
     var placaserv =  dataConductor.placa;
     var codigopee = socket.handshake.query.codconductor;
@@ -191,7 +192,6 @@ io.on('connection', (socket) => {
       rptaconductor.conecto = false;
       rptaconductor.desresultado = "La placa " + placaserv + " se encuentra en servicio";
     }
-    console.log("<<<<conductoriniciaservicio>>>")
     console.log("rptaconductor->",rptaconductor);
 
     io.to(socket.id).emit('verificaestadoplaca', rptaconductor ); //enviando el idSOCKET al cliente que ingresó
