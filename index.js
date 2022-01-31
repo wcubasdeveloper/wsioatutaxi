@@ -63,6 +63,7 @@ io.on('connection', (socket) => {
     itemconductor.codconductor = codigousuario;
     itemconductor.idconnection = socketID;
     setSessionConductor(itemconductor);
+    console.log("ARR_CONDUCTORES_ACTIVOS->", JSON.stringify(ARR_CONDUCTORES_ACTIVOS));
   }
 
   if(tipousuario == 'pasajero'){ //si el usuario que se conecta es pasajero
@@ -83,6 +84,7 @@ io.on('connection', (socket) => {
   //io.to(socketID).emit('sendsocketid', { socketidclient :  socketID}); //enviando el idSOCKET al cliente que ingresó
 
   socket.on('disconnect', function(){
+
     var idconnection = socket.id;
     var removioitem =  null;// removeitemSessionConductor(idconnection)
     var tipousuario = socket.handshake.query.tipousuario;
@@ -102,9 +104,7 @@ io.on('connection', (socket) => {
       if(verificaEnConductoresConectadosByCond(codusuarioactivo).encontro){//verifica si el conductor está en servicio
         // console.log("si está en servicio");
         DATA_CONDUCTORES_EN_SERVICIO = removerConductorEnservicio(codusuarioactivo);
-
         //ENVIANDO EL MENSAJE A LOS PASAJEROS CONECTADOS QUE EL IDCONDUCTOR SE HA IDO
-
         for(let i = 0;i<ARR_PASAJEROS_ACTIVOS.length; i++){
           var idconnectsocket = ARR_PASAJEROS_ACTIVOS[i].idconnection;
           io.to(idconnectsocket).emit('conductorsedesconecto', {idconductor : codusuarioactivo} ); //enviando el idSOCKET al cliente que ingresó
