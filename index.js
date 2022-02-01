@@ -6,6 +6,8 @@ const options = {
   cors: true,
   origin: '*',
   allowEIO3: true, // tweaking it may help
+  pingInterval: 2000,
+  pingTimeout: 2000
 };
 
 
