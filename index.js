@@ -295,7 +295,10 @@ io.on('connection', (socket) => {
     var latitudTrack = datatrack.datagps.latitud;
     var longitudTrack = datatrack.datagps.longitud;
     actualizarUltimoPosteoConductor(idconductor,latitudTrack, longitudTrack);//actualiza el ultimo posteo del taxi en el arreglo principal donde están todos los conductores activos
-    io.emit('recibirtrackconductor', {datatrack, createdAt: new Date()});
+
+    var fechaHoraActual = new Date();
+    fechaHoraActual = fechaHoraActual.toLocaleString();
+    io.emit('recibirtrackconductor', {datatrack, createdAt: fechaHoraActual});
   });
 
   socket.on('testtrack', (testvalue) => { //aqui el conductor envia el tracking para todos los usuarios
@@ -305,7 +308,7 @@ io.on('connection', (socket) => {
   socket.on('pasajeroconfirma', (objpasajeroSolicitud) => { //aqui el pasajero acepta propuesta de un conductor [version actual por codconductor]
     console.log("<------ pasajero confirma --------------->");
     //console.log("objpasajeroSolicitud", objpasajeroSolicitud.conductoresofertaron[0].propuesta);
-    var codconductor = objpasajeroSolicitud.conductoresofertaron[0].propuesta.idconductor;
+    var codconductor = objpasajeroSolicitud.codconductor; //conductoresofertaron[0].propuesta.idconductor;
     var idSocketconductorAceptado = "";
     var conductoresactivos = getSessionConductores();
   
