@@ -124,6 +124,8 @@ io.on('connection', (socket) => {
 
   socket.on('solicitaviaje', (objetoPasajero) => { //aqui el pasajero solicita un viaje a los conductores
 
+    var fechaHoraSolicita = new Date();
+	//
     console.log("[pasajero solicita viaje]");
     var pasajero = JSON.parse(objetoPasajero);
     var latitudPuntoOrigen = pasajero.puntoinicial.lat;
@@ -398,6 +400,23 @@ io.on('connection', (socket) => {
     
     io.emit('recepcionarmensajedeconductor', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
 
+  });
+  socket.on('getconductoresactivos', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
+    console.log(socket.id);
+    // console.log("chat conductor", objeto);
+    // io.emit('recepcionarmensajedeconductor', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
+    io.to(socket.id).emit('respuestaadmin', {
+      DATA_CONDUCTORES_EN_SERVICIO, 
+      createdAt: new Date()});
+  });
+  
+  socket.on('getconductoresactivos', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
+    console.log(socket.id);
+    // console.log("chat conductor", objeto);
+    // io.emit('recepcionarmensajedeconductor', {objeto, createdAt: new Date()}); //enviando el idSOCKET al cliente que ingresó
+    io.to(socket.id).emit('respuestaadmin', {
+      DATA_CONDUCTORES_EN_SERVICIO, 
+      createdAt: new Date()});
   });
   
   socket.on('confirmarterminoviaje', (objeto) => { //aqui el conductor envia el tracking para todos los usuarios
