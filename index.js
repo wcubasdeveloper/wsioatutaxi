@@ -30,6 +30,7 @@ let ARR_PASAJEROS_ACTIVOS = []; //aqui se guardaran los pasajeros activos con su
 
 let DATA_CONDUCTORES_EN_SERVICIO = []; //aqui están los conductores en servicio
 let  RADIO_COBERTURA_METROS = 1000;
+let HORAS_DIF_LOCAL_MILISEC = 18000000; //DIFERENCIA 5 HORAS EN MILISEGUNDOS
 
 io.on('connection', (socket) => {
   //
@@ -155,7 +156,9 @@ io.on('connection', (socket) => {
 
         if(idconductorActivo == codconductorEnCobertura){
           io.to(socketIdConductor).emit('pasajerosolicitaviaje', {
-            pasajero, createdAt: new Date()
+            pasajero, 
+            fechahorasolicito: fechaHoraSolicita.toLocaleString(),
+            fechahoratimestamp : fechaHoraSolicita.getTime() - HORAS_DIF_LOCAL_MILISEC
           });
 
         }
